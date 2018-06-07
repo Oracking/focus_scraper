@@ -61,11 +61,11 @@ we will see in the next section.
 ## API for Xpaths
 littlesoup provides a nice API for xpaths, which can be used to navigate a
 DOM for a particular file. To travel down this xpath:
-html/body/div[3]/div/div[4]/ul[1]/li[4]/b
+###### html/body/div[3]/div/div[4]/ul[1]/li[4]/b
 You would do so:
 
 ```
->>> lsoup.body.div__3.div.div__4.ul__1.li__4.b
+>>> lsoup.body.div__3.div__1.div__4.ul__1.li__4.b__1
 
 ```
 Note that it uses a double underscore to separate the name of a tag from it's
@@ -115,7 +115,10 @@ belonging to a specific class like so:
 
 ```
 Naturally, this will return all elements belonging to that class including:
-<a class="header logo"></a> If you want to avoid this and have an exact class
+```
+<a class="header logo"></a>
+```
+If you want to avoid this and have an exact class
 match you use:
 
 ```
