@@ -142,7 +142,7 @@ Again, any items containing all of these classes will be returned, and you
 can get exact matches with exact_class.
 
 You can get the parent of any tag with the parent attribute and the text it
-contains with the text attribute
+contains with the string attribute
 
 ```
 >>> div = lsoup.find('div', {'class': 'list-item', 'href': 'some_link'})
