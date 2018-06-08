@@ -17,7 +17,7 @@ class BaseNavigableItem():
     def __init__(self):
         self.child_tags = []
         self.parent = None
-        self.attriutes = {}
+        self.attributes = {}
         self.inner_content = ''
 
     def find(self, tag_name, attribute_dict=None, recursive=True,
@@ -143,7 +143,6 @@ class BaseNavigableItem():
             except TypeError:
                 raise TypeError("Something unexpected is happening")
         match = self.find(item, bfs=True)
-        print(match)
         if match:
             return match
         else:
@@ -151,16 +150,13 @@ class BaseNavigableItem():
                                  f"'{self.tag_name}' tag.")
 
 
-class LittleNavigableString(BaseNavigableItem):
-    def __new__(obj, string, parent_tag):
-        obj = string[:]
+class LittleString(str):
+    def __new__(cls, string, parent_tag):
+        obj = string.__new__(cls, string)
         return obj
 
     def __init__(self, string, parent_tag):
-        self.string = None
         self.parent = parent_tag
-        self.child_tags = []
-        self.attributes = None
 
 
 class LittleTag(BaseNavigableItem):
@@ -227,7 +223,7 @@ class LittleTag(BaseNavigableItem):
     @property
     def string(self):
         text = super().string
-        return LittleNavigableString(text, self)
+        return LittleString(text, parent_tag=self)
 
     @property
     def attrs(self):
@@ -377,6 +373,11 @@ class LittleSoup(BaseNavigableItem):
                                                      raw_position=end)
             root_tag._close(forced_close=True, raw_position=end)
             self.root_tags.append(root_tag)
+
+    @property
+    def string(self):
+        text = super().string()
+        return LittleString(text, self)
 
     def _process_html(self, content, encoding):
         if isinstance(content, str):
