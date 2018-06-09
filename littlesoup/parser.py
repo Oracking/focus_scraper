@@ -5,10 +5,32 @@ import re
 
 class BaseNavigableItem():
 
-    COMBINED_STRING_TAG_PATTERN = re.compile(r'(<\s*(\w[\w\d]*)((\s([^"^\'^>]*|'
-                                             r'"[^"]*"|\'[^\']*\')*)?>))|'
-                                             r'(</(\w+)>|'
+    ATTRIBUTE_REGEX = r'(?P<attribute_name>[\w"\'-]+)(' + \
+                      r'\s*=\s*"(?P<val_opt1>[^"]*)"|' + \
+                      r'\s*=\s*\'(?P<val_opt2>[^\']*)\'|' + \
+                      r'\s*=\s*(?P<val_opt3>[^>\s]+)|' + \
+                      r'(?=(\s|/>|>)))' # target: required
+
+    ATTRIBUTE_PATTERN = re.compile(ATTRIBUTE_REGEX)
+
+    # OC_TAG_PATTERN = OPENING_AND_CLOSING_TAG_PATTERN
+    # Closing tag '>' is intentionally included in the 'attrs' capture group
+    OC_TAG_REGEX = r'((?P<html_comment><\!\-\-.*?\-\->)|' + \
+                   r'(?P<opening_tag>' + \
+                   r'<\s*(?P<o_tag_name>\w[\w\d]*)(?P<attrs>' + \
+                   r'(\s(\s*' + \
+                   ATTRIBUTE_REGEX + \
+                   r')*)?' + \
+                   r'(?P<self_closing>\s*/\s*)?>))|' + \
+                   r'(?P<closing_tag>' + \
+                   r'</(?P<c_tag_name>\w+)>))'
+
+    OC_TAG_PATTERN = re.compile(OC_TAG_REGEX, re.DOTALL)
+
+    COMBINED_STRING_TAG_PATTERN = re.compile(r'(' + OC_TAG_REGEX + '|'
                                              r'(?P<plain_text>[^<]+))')
+
+    ATTRIBUTE_VALUE_OPTIONS = ['val_opt1', 'val_opt2', 'val_opt3']
 
     HTML_SINGLETONS = ['area', 'base', 'br', 'col', 'command', 'embed', 'hr',
                        'img', 'input', 'keygen', 'link', 'meta', 'param',
@@ -164,16 +186,6 @@ class LittleTag(BaseNavigableItem):
     Class to handle tag objects which will also be extended by LittleSoup
     class
     '''
-    ATTRIBUTE_REGEX = r'(?P<attribute_name>[\w"\'-]+)(' + \
-                      r'\s*=\s*"(?P<val_opt1>[^"]*)"|' + \
-                      r'\s*=\s*\'(?P<val_opt2>[^\']*)\'|' + \
-                      r'\s*=\s*(?P<val_opt3>[^>\s]+)|' + \
-                      r'(?=(\s|/>|>)))' # target: required
-
-    ATTRIBUTE_PATTERN = re.compile(ATTRIBUTE_REGEX)
-
-    ATTRIBUTE_VALUE_OPTIONS = ['val_opt1', 'val_opt2', 'val_opt3']
-
     def __init__(self, o_re_tag_obj, parser):
         self.o_re_tag_obj = o_re_tag_obj
         self.tag_name = o_re_tag_obj.group('o_tag_name').lower()
@@ -287,21 +299,6 @@ class LittleSoup(BaseNavigableItem):
     '''
     Class for parsing HTML
     '''
-    # OC_TAG_PATTERN = OPENING_AND_CLOSING_TAG_PATTERN
-
-    # r'[^>]*>)|'
-    # Closing tag '>' is intentionally included in the 'attrs' capture group
-    OC_TAG_PATTERN = re.compile(r'((?P<html_comment><\!\-\-.*?\-\->)|'
-                                r'(?P<opening_tag>'
-                                r'<\s*(?P<o_tag_name>\w[\w\d]*)(?P<attrs>'
-                                r'(\s(\s*' +
-                                LittleTag.ATTRIBUTE_REGEX +
-                                r')*)?'
-                                r'(?P<self_closing>\s*/\s*)?>))|'
-                                r'(?P<closing_tag>'
-                                r'</(?P<c_tag_name>\w+)>))', re.DOTALL)
-
-
     def __init__(self, raw_html, encoding=None):
         self.raw_html = self._process_html(raw_html, encoding)
         self.root_tags = []
