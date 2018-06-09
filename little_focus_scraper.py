@@ -280,7 +280,7 @@ class FocusScraper():
                         print(e)
                     time.sleep(interval_seconds)
 
-            thread = threading.Thread(target = threaded_monitor)
+            thread = threading.Thread(target=threaded_monitor)
             # thread.daemon = True
             self.threads.append(thread)
             return thread

@@ -249,41 +249,43 @@ class FocusScraper():
             raise TypeError("Expected wait time to be of type 'int' got {0}" \
                 .format(type_got))
 
-        def threaded_monitor():
-            while True:
-                try:
-                    academic_year, semester = tuple(args)
-                    results = self.get_sem_results(academic_year, semester, cache_results=False)
+        def function_decorator(function):
+            def threaded_monitor():
+                while True:
                     try:
-                        cached_results = self.grades_cache[academic_year][semester]
-                    except Exception as e:
-                        # Handle exception properly
-                        cached_results = {}
-
-                    # Compare cached results to results and send updates
-                    changes = {}
-                    for course, grade in results.items():
+                        academic_year, semester = tuple(args)
+                        results = self.get_sem_results(academic_year, semester, cache_results=False)
                         try:
-                            cached_grade = cached_results[course]
-                            if str(grade) != str(cached_grade):
+                            cached_results = self.grades_cache[academic_year][semester]
+                        except Exception as e:
+                            # Handle exception properly
+                            cached_results = {}
+
+                        # Compare cached results to results and send updates
+                        changes = {}
+                        for course, grade in results.items():
+                            try:
+                                cached_grade = cached_results[course]
+                                if str(grade) != str(cached_grade):
+                                    changes[course] = grade
+                            except KeyError:
                                 changes[course] = grade
+
+                        try:
+                            self.grades_cache[academic_year][semester] = results
                         except KeyError:
-                            changes[course] = grade
+                            self.grades_cache[academic_year] = {semester: results}
 
-                    try:
-                        self.grades_cache[academic_year][semester] = results
-                    except KeyError:
-                        self.grades_cache[academic_year] = {semester: results}
+                        function(results, changes)
+                    except Exception as e:
+                        print(e)
+                    time.sleep(interval_seconds)
 
-                    function(results, changes)
-                except Exception as e:
-                    print(e)
-                time.sleep(interval_seconds)
-
-        thread = threading.Thread(target = threaded_monitor)
-        # thread.daemon = True
-        self.threads.append(thread)
-        return thread
+            thread = threading.Thread(target=threaded_monitor)
+            # thread.daemon = True
+            self.threads.append(thread)
+            return thread
+        return function_decorator
 
 
     def monitor_course(self, function, interval_seconds, academic_year, semester, course_name):
